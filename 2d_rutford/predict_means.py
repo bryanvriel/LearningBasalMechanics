@@ -37,12 +37,6 @@ def main():
     # Create mask
     train_mask = boundary.contains_points(X.ravel(), Y.ravel())
 
-    ## Also load mask for bump
-    #bx, by = ice.load_kml(os.path.join(AUXDIR, 'rutford_bump_mask.kml'), out_epsg=3031)
-    #bump = ice.Boundary(bx, by)
-    #bump_mask = np.invert(bump.contains_points(X.ravel(), Y.ravel()))
-    #train_mask *= bump_mask
-
     # Create 1D points for prediction
     X_pts = X.ravel()[train_mask].reshape(-1, 1).astype(np.float32)
     Y_pts = Y.ravel()[train_mask].reshape(-1, 1).astype(np.float32)
@@ -56,7 +50,6 @@ def main():
 
     # Create checkpoint objects for variables
     ckpt = tf.train.Checkpoint(model=model)
-    #manager = tf.train.CheckpointManager(ckpt, 'checkpoints_pretrain', 1)
     manager = tf.train.CheckpointManager(ckpt, 'checkpoints', 1)
     ckpt.restore(manager.latest_checkpoint).expect_partial()
     

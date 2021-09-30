@@ -16,7 +16,6 @@ tfd = tfp.distributions
 # Locals
 import networks
 from utilities import *
-from pretrain import USE_TEMPORAL
 
 def main():
 
@@ -31,7 +30,7 @@ def main():
     _, _, bounds = load_data()
 
     # Create model
-    model = networks.IceStreamNet(bounds, temporal_model=USE_TEMPORAL)
+    model = networks.IceStreamNet(bounds)
 
     # Create checkpoint objects for variables
     ckpt = tf.train.Checkpoint(model=model)
@@ -76,18 +75,6 @@ def main():
         xb = x[xslice]
         Nx = xb.size
         Tb, Xb = [arr.reshape(-1, 1).astype(np.float32) for arr in np.meshgrid(t, xb)]
-
-        if USE_TEMPORAL:
-            ω1 = 2.0 * np.pi / 0.5
-            ω2 = 2.0 * np.pi / 1.0
-            Tb = np.column_stack((
-                np.ones_like(Tb),
-                Tb,
-                np.cos(ω1 * Tb),
-                np.sin(ω1 * Tb),
-                np.cos(ω2 * Tb),
-                np.sin(ω2 * Tb),
-            ))
 
         # Predict means
         um, hm = predict_mean(Xb, Tb)
