@@ -16,13 +16,21 @@ import networks
 from utilities import *
 from pretrain import USE_TEMPORAL
 
+# Processing parameters
+#RESTORE = False; LOAD_PRETRAIN = True
+RESTORE = True; LOAD_PRETRAIN = False
+BATCH_SIZE = 512
+LEARNING_RATE = 0.0003
+N_EPOCHS = 500
+
+
 def main():
 
     # Initialize logging data
     logging.basicConfig(filename='log_train', filemode='w', level=logging.INFO)
 
     # Load data and bounds
-    data_fit, data_pde, bounds = load_data(seed=13, batch_size=512, loadG=USE_TEMPORAL)
+    data_fit, data_pde, bounds = load_data(seed=13, batch_size=BATCH_SIZE, loadG=USE_TEMPORAL)
 
     # --------------------------------------------------------------------------------
     # Create networks, optimizer, and losses
@@ -32,7 +40,7 @@ def main():
     model = networks.IceStreamNet(bounds, temporal_model=USE_TEMPORAL)
 
     # Optimizer
-    optimizer = tf.keras.optimizers.Adam(learning_rate=0.0005)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE)
     
     @tf.function
     def compute_losses(X, T, Xp, Tp, U, H):
@@ -59,7 +67,7 @@ def main():
         grads = tape.gradient(total_loss, model.trainable_variables)
 
         # Clip gradients?
-        grads, _ = tf.clip_by_global_norm(grads, 4.0)
+        #grads, _ = tf.clip_by_global_norm(grads, 4.0)
 
         # Apply gradients
         optimizer.apply_gradients(zip(grads, model.trainable_variables))
@@ -78,7 +86,7 @@ def main():
     data_pde.reset_training()
 
     # Checkpoint and manager for pretrained weights
-    load_pretrain = False
+    load_pretrain = LOAD_PRETRAIN
     if load_pretrain:
         pre_ckpt = tf.train.Checkpoint(model=model)
         pre_manager = tf.train.CheckpointManager(pre_ckpt, 'checkpoints_pretrain', 1)
@@ -89,19 +97,15 @@ def main():
     manager = tf.train.CheckpointManager(ckpt, 'checkpoints', 1)
 
     # Restore
-    restore = True
-    if restore:
+    if RESTORE:
         ckpt.restore(manager.latest_checkpoint)
-        n_epochs = 5000
-    else:
-        n_epochs = 5000
 
     # --------------------------------------------------------------------------------
     # Training
     # --------------------------------------------------------------------------------
 
     # Training iterations
-    for epoch in tqdm(range(n_epochs), desc='Epoch loop'):
+    for epoch in tqdm(range(N_EPOCHS), desc='Epoch loop'):
 
         # Loop over batches
         train_vals = np.zeros((data_fit.n_batches, n_loss))
