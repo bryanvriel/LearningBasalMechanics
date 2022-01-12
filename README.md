@@ -13,3 +13,7 @@ pgan (https://github.com/bryanvriel/pgan)
 tqdm
 h5py
 ```
+
+### Version compatibility
+
+As of January 2022, the scripts in the examples work for `tensorflow=2.6.2`, `tensorflow_probability=0.14.1`, `keras=2.6.0`, and `python=3.9`. We have currently run into issues for `tensorflow=2.7.0`, which we are currently investigating. For any other compatibility issues, please open a new issue.
